@@ -26,7 +26,6 @@ class Title(models.Model):
     )
     genre = models.ManyToManyField(
         Genre,
-        on_delete=models.PROTECT,
         related_name='genre'
     )
     category = models.ForeignKey(
