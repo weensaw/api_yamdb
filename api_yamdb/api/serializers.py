@@ -17,7 +17,15 @@ class CategorySerializer(serializers.ModelSerializer):
         model = Category
 
 
-class TitleSerializer(serializers.ModelSerializer):
+class TitleGetSerializer(serializers.ModelSerializer):
+    class Meta:
+        fields = (
+            'id', 'name', 'year', 'description', 'genre', 'category'
+        )
+        model = Title
+
+
+class TitlePostSerializer(serializers.ModelSerializer):
     class Meta:
         fields = (
             'id', 'name', 'year', 'description', 'genre', 'category'
