@@ -46,3 +46,4 @@ class Review(models.Model):
     title = models.ForeignKey(
         Title, on_delete=models.CASCADE, related_name='reviews'
     )
+    pub_date = models.DateTimeField(auto_now_add=True)
