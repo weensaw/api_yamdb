@@ -47,3 +47,12 @@ class Review(models.Model):
         Title, on_delete=models.CASCADE, related_name='reviews'
     )
     pub_date = models.DateTimeField(auto_now_add=True)
+
+
+class Comment(models.Model):
+    text = models.TextField()
+    author = models.IntegerField()
+    pub_date = models.DateTimeField(auto_now_add=True)
+    review = models.ForeignKey(
+        Review, on_delete=models.CASCADE, related_name='comments'
+    )
