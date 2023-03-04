@@ -1,5 +1,7 @@
 from django.db import models
 
+from .constants import SCORE_CHOICES
+
 
 class Category(models.Model):
     name = models.CharField(max_length=50)
@@ -36,3 +38,12 @@ class Title(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class Review(models.Model):
+    text = models.TextField()
+    score = models.IntegerField(choices=SCORE_CHOICES, default=1)
+    title = models.ForeignKey(
+        Title, on_delete=models.CASCADE, related_name='reviews'
+    )
+    pub_date = models.DateTimeField(auto_now_add=True)
