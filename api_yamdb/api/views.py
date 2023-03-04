@@ -1,9 +1,9 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets
 
-from .models import Category, Genre, Review, Title 
-from .serializers import (CategorySerializer, GenreSerializer,
-                          ReviewSerializer,
+from .models import Category, Comment, Genre, Review, Title 
+from .serializers import (CategorySerializer, CommentSerializer,
+                          GenreSerializer, ReviewSerializer,
                           TitleGetSerializer, TitlePostSerializer)
 
 
@@ -39,3 +39,22 @@ class ReviewViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         title = get_object_or_404(Title, id=self.kwargs['title_id'])
         serializer.save(title=title)
+
+
+class CommentViewSet(viewsets.ModelViewSet):
+    queryset = Review.objects.all()
+    serializer_class = CommentSerializer
+
+    def get_queryset(self):
+        review = get_object_or_404(
+            Review, 
+            id=self.kwargs['review_id'],
+            title__id=self.kwargs['title_id'])
+        return review.comments.all()
+
+    def perform_create(self, serializer):
+        review = get_object_or_404(
+            Review, 
+            id=self.kwargs['review_id'],
+            title__id=self.kwargs['title_id'])
+        serializer.save(review=review)
