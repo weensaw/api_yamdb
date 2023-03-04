@@ -1,57 +1,4 @@
-from django.contrib.auth.models import AbstractUser
-
 from django.db import models
-
-
-ADMIN = 'admin'
-MODERATOR = 'moderator'
-USER = 'user'
-ROLES = [
-    (ADMIN, 'Administrator'),
-    (MODERATOR, 'Moderator'),
-    (USER, 'User'),
-]
-
-
-class User(AbstractUser):
-    username = models.CharField(
-        verbose_name='Псевдоним пользователя',
-        max_length=150,
-        unique=True,
-    )
-
-    email = models.EmailField(
-        verbose_name='Адрес электронной почты',
-        max_length=254,
-        unique=True,
-    )
-
-    first_name = models.CharField(
-        verbose_name='Имя пользователя',
-        max_length=150,
-    )
-
-    last_name = models.CharField(
-        verbose_name='Фамилия пользователя',
-        max_length=150,
-    )
-
-    bio = models.TextField(
-        verbose_name='Биография',
-        null=True,
-        blank=True,
-    )
-
-    role = models.CharField(
-        verbose_name='Роль',
-        max_length=30,
-        choices=ROLES,
-        default=USER
-    )
-
-    class Meta:
-        verbose_name = 'Пользователь'
-        verbose_name_plural = 'Пользователи'    
 
 
 class Category(models.Model):
@@ -69,9 +16,9 @@ class Category(models.Model):
     def __str__(self):
         return self.name
 
-    # class Meta:
-    #     verbose_name = 'Категория'
-    #     verbose_name_plural = 'Категории'
+    class Meta:
+        verbose_name = 'Категория'
+        verbose_name_plural = 'Категории'
 
 
 class Genre(models.Model):
@@ -89,9 +36,9 @@ class Genre(models.Model):
     def __str__(self):
         return self.name
 
-    # class Meta:
-    #     verbose_name = 'Жанр'
-    #     verbose_name_plural = 'Жанры'
+    class Meta:
+        verbose_name = 'Жанр'
+        verbose_name_plural = 'Жанры'
 
 
 class Title(models.Model):
@@ -124,6 +71,27 @@ class Title(models.Model):
     def __str__(self):
         return self.name
     
-    # class Meta:
-    #     verbose_name = 'Произведение'
-    #     verbose_name_plural = 'Произведения'
+    class Meta:
+        verbose_name = 'Произведение'
+        verbose_name_plural = 'Произведения'
+
+
+class GenreTitle(models.Model):
+    title = models.ForeignKey(
+        Title,
+        verbose_name='Произведение',
+        on_delete=models.CASCADE
+    )
+
+    genre = models.ForeignKey(
+        Genre,
+        verbose_name='Жанр',
+        on_delete=models.CASCADE
+    )
+
+    def __str__(self):
+        return f'{self.title}, в жанре {self.genre}'
+    
+    class Meta:
+        verbose_name = 'Произведение и жанр'
+        verbose_name_plural = 'Произведения и жанры'
