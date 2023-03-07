@@ -1,6 +1,27 @@
+from django.contrib.auth.models import AbstractUser
 from django.db import models
 
 from .constants import SCORE_CHOICES
+
+
+class User(AbstractUser):
+    email = models.EmailField(unique=True)
+    bio = models.TextField(blank=True, null=True)
+
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['username']
+
+    @property
+    def is_admin(self):
+        return self.is_staff
+
+    @property
+    def is_moderator(self):
+        return self.groups.filter(name='moderators').exists()
+
+    @property
+    def is_user(self):
+        return self.groups.filter(name='users').exists()
 
 
 class Category(models.Model):
