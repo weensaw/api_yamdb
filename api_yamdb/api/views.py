@@ -63,7 +63,8 @@ class UserViewSet(viewsets.ModelViewSet):
     pagination_class = PageNumberPagination
 
     @action(methods=['get', 'patch'], detail=False,
-            permission_classes=[IsAuthenticated])
+            permission_classes=[IsAuthenticated],
+            url_path='me', url_name='me')
     def me(self, request):
         if request.method == 'GET':
             serializer = UserSerializer(request.user)
@@ -92,7 +93,8 @@ class RegisterView(generics.CreateAPIView):
         confirmation_code = generate_confirmation_code()
         user.confirmation_code = confirmation_code
         user.save()
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        #return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class CommentViewSet(ReviewCommentMixin):

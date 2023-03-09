@@ -38,7 +38,7 @@ urlpatterns = [
     path('v1/', include(router_v1.urls)),
     path('v1', include('djoser.urls')),
     path('v1', include('djoser.urls.jwt')),
-    path('auth/email/', RegisterView.as_view()),
-    path('auth/token/', ObtainTokenView.as_view()),
-    path('users/me/', UserViewSet.as_view({'patch': 'partial_update'})),
+    path('v1/auth/signup/', RegisterView.as_view()),
+    path('v1/auth/token/', ObtainTokenView.as_view()),
+    path('v1/users/me/', UserViewSet.as_view({'patch': 'partial_update'})),
 ]
