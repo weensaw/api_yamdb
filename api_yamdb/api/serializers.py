@@ -6,8 +6,6 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from .models import Category, Comment, Genre, Review, Title
 
-from .models import Category, Comment, Genre, Review, Title
-
 User = get_user_model()
 
 
