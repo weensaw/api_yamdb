@@ -10,8 +10,7 @@ from .models import Category, Comment, Genre, Review, Title, User
 from .mixins import ReviewCommentMixin
 from .permissions import IsAdmin, IsAdminUserOrReadOnly 
 from .serializers import (CategorySerializer, CommentSerializer, 
-                          GenreSerializer,
-                          MyTokenObtainPairSerializer, RegisterSerializer,
+                          GenreSerializer, RegisterSerializer,
                           ReviewSerializer, TitleGetSerializer,
                           TitlePostSerializer, UserSerializer)
 from .utils import generate_confirmation_code
@@ -77,9 +76,9 @@ class UserViewSet(viewsets.ModelViewSet):
             return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class ObtainTokenView(TokenObtainPairView):
-    serializer_class = MyTokenObtainPairSerializer
-    permission_classes = [permissions.AllowAny]
+#class ObtainTokenView(TokenObtainPairView):
+#    serializer_class = MyTokenObtainPairSerializer
+#   permission_classes = [permissions.AllowAny]
 
 
 class RegisterView(generics.CreateAPIView):

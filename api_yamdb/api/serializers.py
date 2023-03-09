@@ -1,10 +1,32 @@
 from django.shortcuts import get_object_or_404
-from django.contrib.auth.password_validation import validate_password
+#from django.contrib.auth.password_validation import validate_password
 from djoser.serializers import UserSerializer
 from rest_framework import serializers
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+#from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import Category, Comment, Genre, Review, Title, User
+
+
+def get_tokens_for_user(user):
+    refresh = RefreshToken.for_user(user)
+
+    return {
+        'refresh': str(refresh),
+        'access': str(refresh.access_token),
+    }
+
+
+class EmailAuthSerializer(serializers.Serializer):
+    username = serializers.CharField(max_length=150)
+    confirmation_code = serializers.CharField(max_length=100)
+
+    def validate(self, data):
+        user = get_object_or_404(
+            User, confirmation_code=data['confirmation_code'],
+            username=data['username']
+        )
+        return get_tokens_for_user(user)
 
 
 class GenreSerializer(serializers.ModelSerializer):
@@ -106,16 +128,16 @@ class UserSerializer(serializers.ModelSerializer):
                   'bio', 'email', 'role')
 
 
-class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
+#class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     
-    @classmethod
-    def get_token(cls, user):
-        token = super().get_token(user)
+#    @classmethod
+#   def get_token(cls, user):
+#        token = super().get_token(user)
         #token['username'] = user.username
         #token['email'] = user.email
         #token['confirmation_code'] = user.confirmation_code
         #token['roles'] = user.roles
-        return token
+#        return token
 
 
 class RegisterSerializer(serializers.ModelSerializer):

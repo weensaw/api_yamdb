@@ -1,9 +1,12 @@
 from django.urls import include, path
 from rest_framework import routers
+from rest_framework_simplejwt.views import TokenObtainPairView
 
+from .serializers import EmailAuthSerializer
 from .views import (CategoryViewSet, CommentViewSet,
-                    GenreViewSet, ObtainTokenView,
+                    GenreViewSet,
                     RegisterView, ReviewViewSet, TitleViewSet, UserViewSet)
+
 
 router_v1 = routers.DefaultRouter()
 router_v1.register(
@@ -39,6 +42,8 @@ urlpatterns = [
     path('v1', include('djoser.urls')),
     path('v1', include('djoser.urls.jwt')),
     path('v1/auth/signup/', RegisterView.as_view()),
-    path('v1/auth/token/', ObtainTokenView.as_view()),
+    path('v1/auth/token/',
+        TokenObtainPairView.as_view(serializer_class=EmailAuthSerializer)
+    ),
     path('v1/users/me/', UserViewSet.as_view({'patch': 'partial_update'})),
 ]
