@@ -7,7 +7,8 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
 
 from .models import Category, Comment, Genre, Review, Title, User
-from .permissions import IsAdmin
+from .mixins import ReviewCommentMixin
+from .permissions import IsAdmin, IsAdminUserOrReadOnly 
 from .serializers import (CategorySerializer, CommentSerializer, 
                           GenreSerializer,
                           MyTokenObtainPairSerializer, RegisterSerializer,
@@ -20,16 +21,19 @@ class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     search_fields = ['=name', ]
+    permission_classes = [IsAdminUserOrReadOnly, ]
 
 
 class GenreViewSet(viewsets.ModelViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
     search_fields = ['=name', ]
+    permission_classes = [IsAdminUserOrReadOnly, ]
 
 
 class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
+    permission_classes = [IsAdminUserOrReadOnly, ]
 
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve'):
@@ -37,7 +41,7 @@ class TitleViewSet(viewsets.ModelViewSet):
         return TitlePostSerializer
 
 
-class ReviewViewSet(viewsets.ModelViewSet):
+class ReviewViewSet(ReviewCommentMixin):
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
 
@@ -47,7 +51,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         title = get_object_or_404(Title, id=self.kwargs['title_id'])
-        serializer.save(title=title)
+        serializer.save(author=self.request.user, title=title)
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -91,7 +95,7 @@ class RegisterView(generics.CreateAPIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class CommentViewSet(viewsets.ModelViewSet):
+class CommentViewSet(ReviewCommentMixin):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
 
@@ -107,4 +111,4 @@ class CommentViewSet(viewsets.ModelViewSet):
             Review, 
             id=self.kwargs['review_id'],
             title__id=self.kwargs['title_id'])
-        serializer.save(review=review)
+        serializer.save(author=self.request.user, review=review)

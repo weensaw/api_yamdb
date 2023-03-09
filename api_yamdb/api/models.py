@@ -5,8 +5,20 @@ from .constants import SCORE_CHOICES
 
 
 class User(AbstractUser):
-    email = models.EmailField(unique=True)
+
+    class Role(models.TextChoices):
+        USER = 'user'
+        MODERATOR = 'moderator'
+        ADMIN = 'admin'
+
+    email = models.EmailField(blank=False, unique=True)
     bio = models.TextField(blank=True, null=True)
+    role = models.CharField(
+        max_length=20,
+        choices=Role.choices,
+        default=Role.USER,
+        )
+    confirmation_code = models.CharField(max_length=100, blank=True, )
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']
@@ -22,6 +34,9 @@ class User(AbstractUser):
     @property
     def is_user(self):
         return self.groups.filter(name='users').exists()
+
+    def __str__(self):
+        return self.username
 
 
 class Category(models.Model):
@@ -125,12 +140,21 @@ class Review(models.Model):
     title = models.ForeignKey(
         Title, on_delete=models.CASCADE, related_name='reviews'
     )
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='reviews'
+    )
     pub_date = models.DateTimeField(auto_now_add=True)
 
 
 class Comment(models.Model):
     text = models.TextField()
-    author = models.IntegerField()
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='comments'
+    )
     pub_date = models.DateTimeField(auto_now_add=True)
     review = models.ForeignKey(
         Review, on_delete=models.CASCADE, related_name='comments'

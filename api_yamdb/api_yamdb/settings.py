@@ -63,6 +63,7 @@ DATABASES = {
     }
 }
 
+AUTH_USER_MODEL = "api.User"
 
 AUTH_PASSWORD_VALIDATORS = [
     {
