@@ -4,7 +4,9 @@ from djoser.serializers import UserSerializer
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
-from .models import Category, Genre, Review, Title
+from .models import Category, Comment, Genre, Review, Title
+
+from .models import Category, Comment, Genre, Review, Title
 
 User = get_user_model()
 
@@ -97,3 +99,14 @@ class RegisterSerializer(serializers.ModelSerializer):
         validated_data.pop('password_confirm')
         user = get_user_model().objects.create_user(**validated_data)
         return user
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    review = serializers.SlugRelatedField(
+        read_only=True,
+        slug_field='id',
+    )
+
+    class Meta:
+        fields = ('id', 'review', 'text', 'author', 'pub_date')
+        model = Comment
