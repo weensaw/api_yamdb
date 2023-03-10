@@ -76,11 +76,6 @@ class UserViewSet(viewsets.ModelViewSet):
             return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-#class ObtainTokenView(TokenObtainPairView):
-#    serializer_class = MyTokenObtainPairSerializer
-#   permission_classes = [permissions.AllowAny]
-
-
 class RegisterView(generics.CreateAPIView):
     serializer_class = RegisterSerializer
     permission_classes = [permissions.AllowAny]
@@ -92,7 +87,6 @@ class RegisterView(generics.CreateAPIView):
         confirmation_code = generate_confirmation_code()
         user.confirmation_code = confirmation_code
         user.save()
-        #return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 

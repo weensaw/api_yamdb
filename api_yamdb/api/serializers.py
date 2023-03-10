@@ -1,8 +1,6 @@
 from django.shortcuts import get_object_or_404
-#from django.contrib.auth.password_validation import validate_password
 from djoser.serializers import UserSerializer
 from rest_framework import serializers
-#from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import Category, Comment, Genre, Review, Title, User
@@ -17,7 +15,7 @@ def get_tokens_for_user(user):
     }
 
 
-class EmailAuthSerializer(serializers.Serializer):
+class UsernameAuthSerializer(serializers.Serializer):
     username = serializers.CharField(max_length=150)
     confirmation_code = serializers.CharField(max_length=100)
 
@@ -128,23 +126,7 @@ class UserSerializer(serializers.ModelSerializer):
                   'bio', 'email', 'role')
 
 
-#class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
-    
-#    @classmethod
-#   def get_token(cls, user):
-#        token = super().get_token(user)
-        #token['username'] = user.username
-        #token['email'] = user.email
-        #token['confirmation_code'] = user.confirmation_code
-        #token['roles'] = user.roles
-#        return token
-
-
 class RegisterSerializer(serializers.ModelSerializer):
-    #password = serializers.CharField(write_only=True,
-    #                                 required=True,
-    #                                 validators=[validate_password])
-    #password_confirm = serializers.CharField(write_only=True, required=True)
 
     class Meta:
         model = User
@@ -153,13 +135,3 @@ class RegisterSerializer(serializers.ModelSerializer):
             'first_name': {'required': True},
             'last_name': {'required': True},
         }
-
-    #def validate(self, attrs):
-    #    if attrs['password'] != attrs['password_confirm']:
-    #        raise serializers.ValidationError("Passwords do not match")
-    #    return attrs
-
-    #def create(self, validated_data):
-    #    validated_data.pop('password_confirm')
-    #    user = get_user_model().objects.create_user(**validated_data)
-    #    return user

@@ -20,21 +20,6 @@ class User(AbstractUser):
         )
     confirmation_code = models.CharField(max_length=100, blank=True, )
     
-    #USERNAME_FIELD = 'email'
-    #REQUIRED_FIELDS = ['username']
-
-#   @property
-#    def is_admin(self):
-#        return self.is_staff
-
-#    @property
-#    def is_moderator(self):
-#        return self.groups.filter(name='moderators').exists()
-
-#    @property
-#    def is_user(self):
-#        return self.groups.filter(name='users').exists()
-
     def __str__(self):
         return self.username
 
