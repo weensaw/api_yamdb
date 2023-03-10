@@ -34,7 +34,7 @@ router_v1.register(
     CommentViewSet,
     basename='comments'
 )
-router_v1.register('users', UserViewSet, basename='users')
+router_v1.register(r'users', UserViewSet, basename='users')
 
 router_v1_auth = [
     path('signup/', RegisterView.as_view()),
