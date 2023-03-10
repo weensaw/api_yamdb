@@ -48,5 +48,4 @@ router_v1_auth = [
 urlpatterns = [
     path('v1/', include(router_v1.urls)),
     path('v1/auth/', include(router_v1_auth)),
-    #path('v1/users/me/', UserViewSet.as_view({'patch': 'partial_update'})),
 ]
