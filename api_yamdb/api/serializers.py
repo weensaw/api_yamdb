@@ -110,12 +110,6 @@ class CommentSerializer(serializers.ModelSerializer):
         model = Comment
 
 
-class CustomUserSerializer(UserSerializer):
-    class Meta:
-        model = User
-        fields = ('email', 'id', 'username', 'first_name', 'last_name')
-
-
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User

@@ -1,4 +1,5 @@
 from django.shortcuts import get_object_or_404
+from django.core.mail import send_mail
 from rest_framework import filters, generics, permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
@@ -14,6 +15,7 @@ from .serializers import (CategorySerializer, CommentSerializer,
                           ReviewSerializer, TitleGetSerializer,
                           TitlePostSerializer, UserSerializer)
 from .utils import generate_confirmation_code
+from api_yamdb.settings import NOREPLY_YAMDB_EMAIL
 
 
 class CategoryViewSet(CDLViewSet):
@@ -88,6 +90,15 @@ class RegisterView(generics.CreateAPIView):
         confirmation_code = generate_confirmation_code()
         user.confirmation_code = confirmation_code
         user.save()
+        
+        send_mail(
+            'Confirmation_code для YaMDB',
+            f'Сonfirmation_code для работы с API YaMDB {confirmation_code}',
+            NOREPLY_YAMDB_EMAIL,
+            [f'{user.email}'],
+            fail_silently=False,
+        )
+        
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 

@@ -36,12 +36,17 @@ router_v1.register(
 )
 router_v1.register('users', UserViewSet, basename='users')
 
+router_v1_auth = [
+    path('signup/', RegisterView.as_view()),
+    path(
+    'token/',
+    TokenObtainPairView.as_view(serializer_class=UsernameAuthSerializer)
+    ),
+]
+
 
 urlpatterns = [
     path('v1/', include(router_v1.urls)),
-    path('v1/auth/signup/', RegisterView.as_view()),
-    path('v1/auth/token/',
-        TokenObtainPairView.as_view(serializer_class=UsernameAuthSerializer)
-    ),
-    path('v1/users/me/', UserViewSet.as_view({'patch': 'partial_update'})),
+    path('v1/auth/', include(router_v1_auth)),
+    #path('v1/users/me/', UserViewSet.as_view({'patch': 'partial_update'})),
 ]
