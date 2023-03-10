@@ -21,8 +21,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-    #'djoser',
     'api.apps.ApiConfig',
+    'titles.apps.TitlesConfig',
 ]
 
 MIDDLEWARE = [
@@ -64,7 +64,7 @@ DATABASES = {
     }
 }
 
-AUTH_USER_MODEL = "api.User"
+AUTH_USER_MODEL = "titles.User"
 
 AUTH_PASSWORD_VALIDATORS = [
     {

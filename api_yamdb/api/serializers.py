@@ -3,7 +3,7 @@ from djoser.serializers import UserSerializer
 from rest_framework import serializers
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .models import Category, Comment, Genre, Review, Title, User
+from titles.models import Category, Comment, Genre, Review, Title, User
 
 
 def get_tokens_for_user(user):
