@@ -1,3 +1,4 @@
+import os
 from datetime import timedelta
 from pathlib import Path
 
@@ -63,6 +64,7 @@ DATABASES = {
     }
 }
 
+AUTH_USER_MODEL = "api.User"
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -110,3 +112,7 @@ SIMPLE_JWT = {
    'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
    'AUTH_HEADER_TYPES': ('Bearer',),
 }
+
+EMAIL_BACKEND = "django.core.mail.backends.filebased.EmailBackend"
+EMAIL_FILE_PATH = os.path.join(BASE_DIR, "sent_emails")
+NOREPLY_YAMDB_EMAIL = 'noreply@yamdb.app'

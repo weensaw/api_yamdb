@@ -7,10 +7,10 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
 
 from .models import Category, Comment, Genre, Review, Title, User
-from .permissions import IsAdmin
+from .mixins import ReviewCommentMixin
+from .permissions import IsAdmin, IsAdminUserOrReadOnly 
 from .serializers import (CategorySerializer, CommentSerializer, 
-                          GenreSerializer,
-                          MyTokenObtainPairSerializer, RegisterSerializer,
+                          GenreSerializer, RegisterSerializer,
                           ReviewSerializer, TitleGetSerializer,
                           TitlePostSerializer, UserSerializer)
 from .utils import generate_confirmation_code
@@ -20,16 +20,19 @@ class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     search_fields = ['=name', ]
+    permission_classes = [IsAdminUserOrReadOnly, ]
 
 
 class GenreViewSet(viewsets.ModelViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
     search_fields = ['=name', ]
+    permission_classes = [IsAdminUserOrReadOnly, ]
 
 
 class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
+    permission_classes = [IsAdminUserOrReadOnly, ]
 
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve'):
@@ -37,7 +40,7 @@ class TitleViewSet(viewsets.ModelViewSet):
         return TitlePostSerializer
 
 
-class ReviewViewSet(viewsets.ModelViewSet):
+class ReviewViewSet(ReviewCommentMixin):
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
 
@@ -47,7 +50,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         title = get_object_or_404(Title, id=self.kwargs['title_id'])
-        serializer.save(title=title)
+        serializer.save(author=self.request.user, title=title)
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -59,7 +62,8 @@ class UserViewSet(viewsets.ModelViewSet):
     pagination_class = PageNumberPagination
 
     @action(methods=['get', 'patch'], detail=False,
-            permission_classes=[IsAuthenticated])
+            permission_classes=[IsAuthenticated],
+            url_path='me', url_name='me')
     def me(self, request):
         if request.method == 'GET':
             serializer = UserSerializer(request.user)
@@ -70,11 +74,6 @@ class UserViewSet(viewsets.ModelViewSet):
             serializer.is_valid(raise_exception=True)
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
-
-
-class ObtainTokenView(TokenObtainPairView):
-    serializer_class = MyTokenObtainPairSerializer
-    permission_classes = [permissions.AllowAny]
 
 
 class RegisterView(generics.CreateAPIView):
@@ -88,10 +87,10 @@ class RegisterView(generics.CreateAPIView):
         confirmation_code = generate_confirmation_code()
         user.confirmation_code = confirmation_code
         user.save()
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class CommentViewSet(viewsets.ModelViewSet):
+class CommentViewSet(ReviewCommentMixin):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
 
@@ -107,4 +106,4 @@ class CommentViewSet(viewsets.ModelViewSet):
             Review, 
             id=self.kwargs['review_id'],
             title__id=self.kwargs['title_id'])
-        serializer.save(review=review)
+        serializer.save(author=self.request.user, review=review)
