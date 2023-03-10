@@ -3,7 +3,7 @@ from django.core.mail import send_mail
 from rest_framework import filters, generics, permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 
 from titles.models import Category, Comment, Genre, Review, Title, User
@@ -58,7 +58,7 @@ class ReviewViewSet(ReviewCommentMixin):
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = [IsAdmin]
+    permission_classes = [IsAdminUser | IsAdmin]
     lookup_field = 'username'
     filter_backends = [filters.SearchFilter]
     search_fields = ['username', ]
