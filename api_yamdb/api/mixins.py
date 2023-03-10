@@ -1,4 +1,4 @@
-from rest_framework import viewsets
+from rest_framework import mixins, viewsets
 from rest_framework.permissions import AllowAny
 
 from .permissions import IsAdmin, IsModerator, IsOwner, IsUser
@@ -18,3 +18,10 @@ class ReviewCommentMixin(viewsets.ModelViewSet):
                     in self.permission_classes_by_action[self.action]]
         except KeyError:
             return [permission() for permission in self.permission_classes]
+
+
+class CDLViewSet(mixins.CreateModelMixin,
+                 mixins.DestroyModelMixin,
+                 mixins.ListModelMixin,
+                 viewsets.GenericViewSet):
+    ...

@@ -15,9 +15,9 @@ router_v1.register(
     basename='categories'
 )
 router_v1.register(
-    'genre',
+    'genres',
     GenreViewSet,
-    basename='genre'
+    basename='genres'
 )
 router_v1.register(
     'titles',
@@ -39,8 +39,8 @@ router_v1.register('users', UserViewSet, basename='users')
 
 urlpatterns = [
     path('v1/', include(router_v1.urls)),
-    path('v1', include('djoser.urls')),
-    path('v1', include('djoser.urls.jwt')),
+    #path('v1', include('djoser.urls')),
+    #path('v1', include('djoser.urls.jwt')),
     path('v1/auth/signup/', RegisterView.as_view()),
     path('v1/auth/token/',
         TokenObtainPairView.as_view(serializer_class=UsernameAuthSerializer)

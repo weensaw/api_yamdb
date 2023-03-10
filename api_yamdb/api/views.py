@@ -4,10 +4,10 @@ from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework_simplejwt.views import TokenObtainPairView
+#from rest_framework_simplejwt.views import TokenObtainPairView
 
 from .models import Category, Comment, Genre, Review, Title, User
-from .mixins import ReviewCommentMixin
+from .mixins import CDLViewSet, ReviewCommentMixin
 from .permissions import IsAdmin, IsAdminUserOrReadOnly 
 from .serializers import (CategorySerializer, CommentSerializer, 
                           GenreSerializer, RegisterSerializer,
@@ -16,18 +16,19 @@ from .serializers import (CategorySerializer, CommentSerializer,
 from .utils import generate_confirmation_code
 
 
-class CategoryViewSet(viewsets.ModelViewSet):
+class CategoryViewSet(CDLViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     search_fields = ['=name', ]
     permission_classes = [IsAdminUserOrReadOnly, ]
 
 
-class GenreViewSet(viewsets.ModelViewSet):
+class GenreViewSet(CDLViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
     search_fields = ['=name', ]
     permission_classes = [IsAdminUserOrReadOnly, ]
+    filter_backends = [filters.SearchFilter]
 
 
 class TitleViewSet(viewsets.ModelViewSet):
