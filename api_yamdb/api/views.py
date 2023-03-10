@@ -1,9 +1,9 @@
 from django.shortcuts import get_object_or_404
 from django.core.mail import send_mail
-from rest_framework import filters, generics, permissions, status, viewsets
+from rest_framework import filters, generics, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 
 from titles.models import Category, Comment, Genre, Review, Title, User
@@ -22,6 +22,7 @@ class CategoryViewSet(CDLViewSet):
     serializer_class = CategorySerializer
     search_fields = ['=name', ]
     permission_classes = [IsAdminUserOrReadOnly, ]
+    lookup_field = 'slug'
 
 
 class GenreViewSet(CDLViewSet):
@@ -29,6 +30,7 @@ class GenreViewSet(CDLViewSet):
     serializer_class = GenreSerializer
     search_fields = ['=name', ]
     permission_classes = [IsAdminUserOrReadOnly, ]
+    lookup_field = 'slug'
     filter_backends = [filters.SearchFilter]
 
 
@@ -81,10 +83,10 @@ class UserViewSet(viewsets.ModelViewSet):
 
 class RegisterView(generics.CreateAPIView):
     serializer_class = RegisterSerializer
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [AllowAny| IsAdmin]
 
     def post(self, request):
-        serializer = UserSerializer(data=request.data)
+        serializer = RegisterSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
         confirmation_code = generate_confirmation_code()
@@ -105,6 +107,7 @@ class RegisterView(generics.CreateAPIView):
 class CommentViewSet(ReviewCommentMixin):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
+    permission_classes = [IsAdminUserOrReadOnly, ]
 
     def get_queryset(self):
         review = get_object_or_404(

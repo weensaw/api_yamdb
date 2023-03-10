@@ -9,7 +9,7 @@ class ReviewCommentMixin(viewsets.ModelViewSet):
     permission_classes_by_action = {'list': [AllowAny],
                                     'create': [IsUser | IsAdmin | IsModerator],
                                     'retrieve': [AllowAny],
-                                    'partial_update': [IsOwner],
+                                    'partial_update': [IsOwner | IsModerator],
                                     'destroy': [IsAdmin | IsModerator]}
 
     def get_permissions(self):

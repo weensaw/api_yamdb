@@ -1,5 +1,4 @@
 from django.shortcuts import get_object_or_404
-from djoser.serializers import UserSerializer
 from rest_framework import serializers
 from rest_framework_simplejwt.tokens import RefreshToken
 
@@ -29,7 +28,7 @@ class UsernameAuthSerializer(serializers.Serializer):
 
 class GenreSerializer(serializers.ModelSerializer):
     class Meta:
-        fields = ('id', 'name', 'slug')
+        fields = ('name', 'slug')
         lookup_field = 'slug'
         model = Genre
 
@@ -121,8 +120,4 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('username', 'email', 'first_name', 'last_name')
-        extra_kwargs = {
-            'first_name': {'required': True},
-            'last_name': {'required': True},
-        }
+        fields = ('username', 'email')
