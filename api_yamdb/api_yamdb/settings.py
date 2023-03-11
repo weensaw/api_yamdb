@@ -22,7 +22,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'api.apps.ApiConfig',
-    'titles.apps.TitlesConfig',
+    'reviews.apps.ReviewsConfig',
 ]
 
 MIDDLEWARE = [
@@ -64,7 +64,7 @@ DATABASES = {
     }
 }
 
-AUTH_USER_MODEL = "titles.User"
+AUTH_USER_MODEL = "reviews.User"
 
 AUTH_PASSWORD_VALIDATORS = [
     {

@@ -9,7 +9,7 @@ from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenViewBase
 
-from titles.models import Category, Comment, Genre, Review, Title, User
+from reviews.models import Category, Comment, Genre, Review, Title, User
 from .mixins import CDLViewSet, ReviewCommentMixin
 from .permissions import IsAdmin, IsAdminUserOrReadOnly 
 from .serializers import (CategorySerializer, CommentSerializer, 

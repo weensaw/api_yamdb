@@ -3,7 +3,7 @@ import csv
 from django.conf import settings
 from django.core.management import BaseCommand
 
-from ....titles.models import (Category, Comment, GenreTitle, Genre, Review,
+from ....reviews.models import (Category, Comment, GenreTitle, Genre, Review,
                     Title, User)
 
 CSV_LIST_DICT = {
