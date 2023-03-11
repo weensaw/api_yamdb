@@ -1,9 +1,8 @@
 from django.shortcuts import get_object_or_404
-from djoser.serializers import UserSerializer
 from rest_framework import serializers
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .models import Category, Comment, Genre, Review, Title, User
+from titles.models import Category, Comment, Genre, Review, Title, User
 
 
 def get_tokens_for_user(user):
@@ -29,7 +28,7 @@ class UsernameAuthSerializer(serializers.Serializer):
 
 class GenreSerializer(serializers.ModelSerializer):
     class Meta:
-        fields = ('id', 'name', 'slug')
+        fields = ('name', 'slug')
         lookup_field = 'slug'
         model = Genre
 
@@ -42,9 +41,6 @@ class CategorySerializer(serializers.ModelSerializer):
 
 
 class TitleGetSerializer(serializers.ModelSerializer):
-    rating = serializers.IntegerField(
-        source='reviews__score__avg', read_only=True
-    )
     genre = GenreSerializer(many=True, read_only=True)
     category = CategorySerializer(read_only=True)
 
@@ -113,12 +109,6 @@ class CommentSerializer(serializers.ModelSerializer):
         model = Comment
 
 
-class CustomUserSerializer(UserSerializer):
-    class Meta:
-        model = User
-        fields = ('email', 'id', 'username', 'first_name', 'last_name')
-
-
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
@@ -130,8 +120,4 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('username', 'email', 'first_name', 'last_name')
-        extra_kwargs = {
-            'first_name': {'required': True},
-            'last_name': {'required': True},
-        }
+        fields = ('username', 'email')

@@ -4,8 +4,8 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 
 from .serializers import UsernameAuthSerializer
 from .views import (CategoryViewSet, CommentViewSet,
-                    GenreViewSet,
-                    RegisterView, ReviewViewSet, TitleViewSet, UserViewSet)
+                    GenreViewSet, RegisterView,
+                    ReviewViewSet, TitleViewSet, UserViewSet)
 
 
 router_v1 = routers.DefaultRouter()
@@ -15,9 +15,9 @@ router_v1.register(
     basename='categories'
 )
 router_v1.register(
-    'genre',
+    'genres',
     GenreViewSet,
-    basename='genre'
+    basename='genres'
 )
 router_v1.register(
     'titles',
@@ -34,16 +34,18 @@ router_v1.register(
     CommentViewSet,
     basename='comments'
 )
-router_v1.register('users', UserViewSet, basename='users')
+router_v1.register(r'users', UserViewSet, basename='users')
+
+router_v1_auth = [
+    path('signup/', RegisterView.as_view()),
+    path(
+    'token/',
+    TokenObtainPairView.as_view(serializer_class=UsernameAuthSerializer)
+    ),
+]
 
 
 urlpatterns = [
     path('v1/', include(router_v1.urls)),
-    path('v1', include('djoser.urls')),
-    path('v1', include('djoser.urls.jwt')),
-    path('v1/auth/signup/', RegisterView.as_view()),
-    path('v1/auth/token/',
-        TokenObtainPairView.as_view(serializer_class=UsernameAuthSerializer)
-    ),
-    path('v1/users/me/', UserViewSet.as_view({'patch': 'partial_update'})),
+    path('v1/auth/', include(router_v1_auth)),
 ]
