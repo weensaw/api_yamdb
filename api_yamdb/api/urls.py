@@ -1,11 +1,10 @@
 from django.urls import include, path
 from rest_framework import routers
-from rest_framework_simplejwt.views import TokenObtainPairView
 
-from .serializers import UsernameAuthSerializer
 from .views import (CategoryViewSet, CommentViewSet,
                     GenreViewSet, RegisterView,
-                    ReviewViewSet, TitleViewSet, UserViewSet)
+                    ReviewViewSet, TitleViewSet, TokenView,
+                    UserViewSet)
 
 
 router_v1 = routers.DefaultRouter()
@@ -40,7 +39,7 @@ router_v1_auth = [
     path('signup/', RegisterView.as_view()),
     path(
     'token/',
-    TokenObtainPairView.as_view(serializer_class=UsernameAuthSerializer)
+    TokenView.as_view()
     ),
 ]
 

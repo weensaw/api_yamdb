@@ -1,29 +1,10 @@
-from django.shortcuts import get_object_or_404
+from django.contrib.auth import authenticate
 from rest_framework import serializers
-from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.exceptions import NotFound
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework_simplejwt.tokens import AccessToken
 
 from titles.models import Category, Comment, Genre, Review, Title, User
-
-
-def get_tokens_for_user(user):
-    refresh = RefreshToken.for_user(user)
-
-    return {
-        'refresh': str(refresh),
-        'access': str(refresh.access_token),
-    }
-
-
-class UsernameAuthSerializer(serializers.Serializer):
-    username = serializers.CharField(max_length=150)
-    confirmation_code = serializers.CharField(max_length=100)
-
-    def validate(self, data):
-        user = get_object_or_404(
-            User, confirmation_code=data['confirmation_code'],
-            username=data['username']
-        )
-        return get_tokens_for_user(user)
 
 
 class GenreSerializer(serializers.ModelSerializer):
@@ -121,3 +102,41 @@ class RegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('username', 'email')
+
+
+class TokenSerializer(serializers.ModelSerializer, TokenObtainPairSerializer):
+
+    def __init__(self, instance=None, data=..., **kwargs):
+        super().__init__(instance, data, **kwargs)
+        self.fields['password'].required = False
+
+    class Meta:
+        model = User
+        fields = ('username', 'confirmation_code')
+
+    def validate(self, attrs):
+        authenticate_kwargs = {
+            self.username_field: attrs[self.username_field],
+        }
+        confirm_code = None
+        if 'request' in self.context:
+            authenticate_kwargs['request'] = self.context['request']
+            confirm_code = self.context['request'].data['confirmation_code']
+
+        self.user = authenticate(**authenticate_kwargs)
+
+        if self.user is None:
+            raise NotFound(
+                'Пользователя не существует.'
+            )
+
+        if self.user.confirmation_code != confirm_code:
+            raise serializers.ValidationError(
+                'Не верный confirmation_code.'
+            )
+
+        access = AccessToken.for_user(self.user)
+
+        return {
+            'token': str(access)
+        }
