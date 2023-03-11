@@ -36,7 +36,9 @@ router_v1.register(
 router_v1.register(r'users', UserViewSet, basename='users')
 
 router_v1_auth = [
-    path('signup/', RegisterView.as_view()),
+    path('signup/',
+         RegisterView.as_view({'post': 'create', 'get': 'retrieve'})
+    ),
     path(
     'token/',
     TokenView.as_view()

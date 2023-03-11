@@ -1,7 +1,9 @@
 from django.shortcuts import get_object_or_404
 from django.core.mail import send_mail
-from rest_framework import filters, generics, status, viewsets
+from rest_framework import filters, status, viewsets
+from rest_framework.exceptions import MethodNotAllowed
 from rest_framework.decorators import action
+from rest_framework.mixins import CreateModelMixin, RetrieveModelMixin
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
@@ -14,8 +16,7 @@ from .serializers import (CategorySerializer, CommentSerializer,
                           GenreSerializer, RegisterSerializer,
                           ReviewSerializer, TitleGetSerializer,
                           TitlePostSerializer, TokenSerializer, UserSerializer)
-from .utils import generate_confirmation_code
-from api_yamdb.settings import NOREPLY_YAMDB_EMAIL
+#from .utils import generate_confirmation_code
 
 
 class CategoryViewSet(CDLViewSet):
@@ -24,6 +25,7 @@ class CategoryViewSet(CDLViewSet):
     search_fields = ['=name', ]
     permission_classes = [IsAdminUserOrReadOnly, ]
     lookup_field = 'slug'
+    pagination_class = PageNumberPagination
 
 
 class GenreViewSet(CDLViewSet):
@@ -67,7 +69,7 @@ class UserViewSet(viewsets.ModelViewSet):
     search_fields = ['username', ]
     pagination_class = PageNumberPagination
 
-    @action(methods=['get', 'patch'], detail=False,
+    @action(methods=['get', 'patch', 'put', 'delete'], detail=False,
             permission_classes=[IsAuthenticated],
             url_path='me', url_name='me')
     def me(self, request):
@@ -80,29 +82,40 @@ class UserViewSet(viewsets.ModelViewSet):
             serializer.is_valid(raise_exception=True)
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
+        if request.method == 'DELETE':
+            raise MethodNotAllowed(method='DELETE')
 
 
-class RegisterView(generics.CreateAPIView):
+class RegisterView(CreateModelMixin, RetrieveModelMixin, viewsets.GenericViewSet):
+    queryset = User.objects.all()
     serializer_class = RegisterSerializer
     permission_classes = [AllowAny| IsAdmin]
 
-    def post(self, request):
-        serializer = RegisterSerializer(data=request.data)
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        user = serializer.save()
-        confirmation_code = generate_confirmation_code()
-        user.confirmation_code = confirmation_code
-        user.save()
-        
-        send_mail(
-            'Confirmation_code для YaMDB',
-            f'Сonfirmation_code для работы с API YaMDB {confirmation_code}',
-            NOREPLY_YAMDB_EMAIL,
-            [f'{user.email}'],
-            fail_silently=False,
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(
+            serializer.data,
+            status=status.HTTP_200_OK,
+            headers=headers
         )
-        
-        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def retrieve(self, request, *args, **kwargs):
+        serializer = self.get_serializer(request.data)
+        username = serializer.data["username"]
+        user = get_object_or_404(User, username=username)
+        user.email_user(
+            subject='Confirmation_code для YaMDB',
+            message=f'Сonfirmation_code {user.confirmation_code}',
+            fail_silently=False
+        )
+        return Response(
+            serializer.data,
+            status=status.HTTP_200_OK
+        )
+
 
 
 class TokenView(TokenViewBase):

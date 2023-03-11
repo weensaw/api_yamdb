@@ -10,3 +10,11 @@ SCORE_CHOICES = [
     (9, 9),
     (10, 10),
 ]
+
+ROLE_CHOICES = [
+    ('user', 'USER'),
+    ('moderator', 'MODERATOR'),
+    ('admin', 'ADMIN'),
+]
+
+CODE_LENGTH = 5

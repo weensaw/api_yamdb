@@ -98,10 +98,28 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class RegisterSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = User
         fields = ('username', 'email')
+
+    def validate_username(self, username):
+        if username == 'me':
+            raise serializers.ValidationError(
+                'Сочетание "me" нельзя использовать в качестве никнейма.'
+            )
+        return username
+
+    def create(self, validated_data):
+        user = User.objects.create_user(**validated_data)
+        user.email_user(
+            subject='Confirmation_code для YaMDB',
+            message=f'Сonfirmation_code {user.confirmation_code}',
+            fail_silently=False
+        )
+        return {
+            'email': user.email,
+            'username': user.username,
+        }
 
 
 class TokenSerializer(serializers.ModelSerializer, TokenObtainPairSerializer):
