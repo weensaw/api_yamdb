@@ -1,10 +1,12 @@
 from django.contrib.auth import authenticate
 from rest_framework import serializers
 from rest_framework.exceptions import NotFound
+#from rest_framework.validators import UniqueTogetherValidator
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.tokens import AccessToken
 
 from reviews.models import Category, Comment, Genre, Review, Title, User
+#from .utils import generate_confirmation_code
 
 
 class GenreSerializer(serializers.ModelSerializer):
@@ -23,7 +25,10 @@ class CategorySerializer(serializers.ModelSerializer):
 
 class TitleGetSerializer(serializers.ModelSerializer):
     genre = GenreSerializer(many=True, read_only=True)
-    category = CategorySerializer(read_only=True)
+    category = CategorySerializer(required=True)
+    description = serializers.CharField(
+        required=False
+    )
 
     class Meta:
         fields = (
@@ -77,16 +82,21 @@ class ReviewSerializer(serializers.ModelSerializer):
 
 
 class CommentSerializer(serializers.ModelSerializer):
-    review = serializers.SlugRelatedField(
-        read_only=True,
-        slug_field='id',
-    )
+#   review = serializers.SlugRelatedField(
+#        read_only=True,
+#       slug_field='id',
+#    )
     author = serializers.SlugRelatedField(
         slug_field='username',
-        read_only=True)
+        read_only=True,
+        default=serializers.CurrentUserDefault()
+    )
+    pub_date = serializers.DateTimeField(
+        read_only=True
+    )
 
     class Meta:
-        fields = ('id', 'review', 'text', 'author', 'pub_date')
+        fields = ('id', 'text', 'author', 'pub_date')
         model = Comment
 
 

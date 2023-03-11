@@ -11,7 +11,7 @@ from rest_framework_simplejwt.views import TokenViewBase
 
 from reviews.models import Category, Comment, Genre, Review, Title, User
 from .mixins import CDLViewSet, ReviewCommentMixin
-from .permissions import IsAdmin, IsAdminUserOrReadOnly 
+from .permissions import IsAdmin, IsAdminUserOrReadOnly, AuthorOrHasRoleOrReadOnly 
 from .serializers import (CategorySerializer, CommentSerializer, 
                           GenreSerializer, RegisterSerializer,
                           ReviewSerializer, TitleGetSerializer,
@@ -40,6 +40,7 @@ class GenreViewSet(CDLViewSet):
 class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
     permission_classes = [IsAdminUserOrReadOnly, ]
+    filter_backends = [filters.SearchFilter]
 
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve'):
@@ -50,6 +51,7 @@ class TitleViewSet(viewsets.ModelViewSet):
 class ReviewViewSet(ReviewCommentMixin):
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
+    permission_classes = [AuthorOrHasRoleOrReadOnly, ]
 
     def get_queryset(self):
         title = get_object_or_404(Title, id=self.kwargs['title_id'])
@@ -97,9 +99,9 @@ class RegisterView(CreateModelMixin, RetrieveModelMixin, viewsets.GenericViewSet
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
         return Response(
-            serializer.data,
-            status=status.HTTP_200_OK,
-            headers=headers
+                serializer.data,
+                status=status.HTTP_200_OK,
+                headers=headers
         )
 
     def retrieve(self, request, *args, **kwargs):
@@ -123,10 +125,10 @@ class TokenView(TokenViewBase):
     serializer_class = TokenSerializer
 
 
-class CommentViewSet(ReviewCommentMixin):
+class CommentViewSet(viewsets.ModelViewSet):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
-    permission_classes = [IsAdminUserOrReadOnly, ]
+    permission_classes = [AuthorOrHasRoleOrReadOnly, ]
 
     def get_queryset(self):
         review = get_object_or_404(
