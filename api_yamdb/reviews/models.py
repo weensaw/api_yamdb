@@ -1,25 +1,89 @@
-from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.contrib.auth.base_user import BaseUserManager
+from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.hashers import make_password
 
-from .constants import SCORE_CHOICES
+from .constants import (SCORE_CHOICES, ROLE_CHOICES,
+                        CODE_LENGTH)
+
+
+class CustomUserManager(BaseUserManager):
+    def create_user(
+        self,
+        username,
+        email,
+        password='',
+        bio='',
+        role='user',
+        first_name='',
+        last_name=''
+    ):
+        if username is None:
+            raise TypeError('Users must have a username.')
+
+        if email is None:
+            raise TypeError('Users must have an email address.')
+
+        user = self.model(
+            username=username,
+            email=self.normalize_email(email),
+            confirmation_code=self.make_random_password(length=CODE_LENGTH),
+            password=password,
+            role=role,
+            bio=bio,
+            first_name=first_name,
+            last_name=last_name
+        )
+        user.save()
+
+        return user
+
+    def create_superuser(
+        self,
+        username,
+        email,
+        password=None,
+        bio='',
+        role='admin',
+        first_name='',
+        last_name=''
+    ):
+        if password is None:
+            raise TypeError('Superusers must have a password.')
+
+        user = self.create_user(
+            username=username,
+            email=email,
+            password=make_password(password),
+            role=role,
+            bio=bio,
+            first_name=first_name,
+            last_name=last_name
+        )
+        user.is_superuser = True
+        user.is_staff = True
+        user.email_user(
+            subject='confirmation_code',
+            message=user.confirmation_code,
+            fail_silently=False
+        )
+        user.save()
+
+        return user
 
 
 class User(AbstractUser):
-
-    class Role(models.TextChoices):
-        USER = 'user'
-        MODERATOR = 'moderator'
-        ADMIN = 'admin'
-
     email = models.EmailField(blank=False, unique=True)
     bio = models.TextField(blank=True, null=True)
     role = models.CharField(
         max_length=20,
-        choices=Role.choices,
-        default=Role.USER,
+        choices=ROLE_CHOICES,
+        default='user',
         )
-    confirmation_code = models.CharField(max_length=100, blank=True, )
+    confirmation_code = models.CharField(max_length=CODE_LENGTH, blank=True, )
     
+    objects = CustomUserManager()
+
     def __str__(self):
         return self.username
 
@@ -132,6 +196,12 @@ class Review(models.Model):
     )
     pub_date = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['title', 'author'],
+                name='unique_review'),
+        ]
 
 class Comment(models.Model):
     text = models.TextField()

@@ -1,20 +1,22 @@
 from django.shortcuts import get_object_or_404
 from django.core.mail import send_mail
-from rest_framework import filters, generics, status, viewsets
+from rest_framework import filters, status, viewsets
+from rest_framework.exceptions import MethodNotAllowed
 from rest_framework.decorators import action
+from rest_framework.mixins import CreateModelMixin, RetrieveModelMixin
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
+from rest_framework_simplejwt.views import TokenViewBase
 
-from titles.models import Category, Comment, Genre, Review, Title, User
+from reviews.models import Category, Comment, Genre, Review, Title, User
 from .mixins import CDLViewSet, ReviewCommentMixin
-from .permissions import IsAdmin, IsAdminUserOrReadOnly 
+from .permissions import IsAdmin, IsAdminUserOrReadOnly, AuthorOrHasRoleOrReadOnly 
 from .serializers import (CategorySerializer, CommentSerializer, 
                           GenreSerializer, RegisterSerializer,
                           ReviewSerializer, TitleGetSerializer,
-                          TitlePostSerializer, UserSerializer)
-from .utils import generate_confirmation_code
-from api_yamdb.settings import NOREPLY_YAMDB_EMAIL
+                          TitlePostSerializer, TokenSerializer, UserSerializer)
+#from .utils import generate_confirmation_code
 
 
 class CategoryViewSet(CDLViewSet):
@@ -23,6 +25,7 @@ class CategoryViewSet(CDLViewSet):
     search_fields = ['=name', ]
     permission_classes = [IsAdminUserOrReadOnly, ]
     lookup_field = 'slug'
+    pagination_class = PageNumberPagination
 
 
 class GenreViewSet(CDLViewSet):
@@ -37,6 +40,7 @@ class GenreViewSet(CDLViewSet):
 class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
     permission_classes = [IsAdminUserOrReadOnly, ]
+    filter_backends = [filters.SearchFilter]
 
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve'):
@@ -47,6 +51,7 @@ class TitleViewSet(viewsets.ModelViewSet):
 class ReviewViewSet(ReviewCommentMixin):
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
+    permission_classes = [AuthorOrHasRoleOrReadOnly, ]
 
     def get_queryset(self):
         title = get_object_or_404(Title, id=self.kwargs['title_id'])
@@ -66,7 +71,7 @@ class UserViewSet(viewsets.ModelViewSet):
     search_fields = ['username', ]
     pagination_class = PageNumberPagination
 
-    @action(methods=['get', 'patch'], detail=False,
+    @action(methods=['get', 'patch', 'put', 'delete'], detail=False,
             permission_classes=[IsAuthenticated],
             url_path='me', url_name='me')
     def me(self, request):
@@ -79,35 +84,51 @@ class UserViewSet(viewsets.ModelViewSet):
             serializer.is_valid(raise_exception=True)
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
+        if request.method == 'DELETE':
+            raise MethodNotAllowed(method='DELETE')
 
 
-class RegisterView(generics.CreateAPIView):
+class RegisterView(CreateModelMixin, RetrieveModelMixin, viewsets.GenericViewSet):
+    queryset = User.objects.all()
     serializer_class = RegisterSerializer
     permission_classes = [AllowAny| IsAdmin]
 
-    def post(self, request):
-        serializer = RegisterSerializer(data=request.data)
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        user = serializer.save()
-        confirmation_code = generate_confirmation_code()
-        user.confirmation_code = confirmation_code
-        user.save()
-        
-        send_mail(
-            'Confirmation_code для YaMDB',
-            f'Сonfirmation_code для работы с API YaMDB {confirmation_code}',
-            NOREPLY_YAMDB_EMAIL,
-            [f'{user.email}'],
-            fail_silently=False,
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(
+                serializer.data,
+                status=status.HTTP_200_OK,
+                headers=headers
         )
-        
-        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def retrieve(self, request, *args, **kwargs):
+        serializer = self.get_serializer(request.data)
+        username = serializer.data["username"]
+        user = get_object_or_404(User, username=username)
+        user.email_user(
+            subject='Confirmation_code для YaMDB',
+            message=f'Сonfirmation_code {user.confirmation_code}',
+            fail_silently=False
+        )
+        return Response(
+            serializer.data,
+            status=status.HTTP_200_OK
+        )
 
 
-class CommentViewSet(ReviewCommentMixin):
+
+class TokenView(TokenViewBase):
+    permission_classes = (AllowAny,)
+    serializer_class = TokenSerializer
+
+
+class CommentViewSet(viewsets.ModelViewSet):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
-    permission_classes = [IsAdminUserOrReadOnly, ]
+    permission_classes = [AuthorOrHasRoleOrReadOnly, ]
 
     def get_queryset(self):
         review = get_object_or_404(
