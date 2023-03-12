@@ -3,8 +3,8 @@ import csv
 from django.conf import settings
 from django.core.management import BaseCommand
 
-from ....reviews.models import (Category, Comment, GenreTitle, Genre, Review,
-                    Title, User)
+from ....reviews.models import (Category, Comment, GenreTitle, Genre,
+                                Review, Title, User)
 
 CSV_LIST_DICT = {
     Category: 'category.csv',
@@ -32,4 +32,3 @@ class Command(BaseCommand):
                         model.objects.create(**row)
                     except Exception as e:
                         print(f'Ошибочка вышла: {e}.')
-            

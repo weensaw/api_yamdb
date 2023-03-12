@@ -3,23 +3,26 @@ from django.shortcuts import get_object_or_404
 from django.db.models.aggregates import Avg
 
 from rest_framework import filters, status, views, viewsets
-from rest_framework.exceptions import MethodNotAllowed
 from rest_framework.decorators import action
-from rest_framework.mixins import CreateModelMixin, RetrieveModelMixin
+from rest_framework.exceptions import MethodNotAllowed
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
+from rest_framework.permissions import (AllowAny, IsAdminUser,
+                                        IsAuthenticated)
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenViewBase
 
-from reviews.models import Category, Comment, Genre, Review, Title, User
-from .mixins import CDLViewSet
+from reviews.models import (Category, Comment, Genre,
+                            Review, Title, User)
 from .filters import TitleFilter
+from .mixins import CDLViewSet
 from .paginations import CategoryPagination
-from .permissions import IsAdmin, IsAdminUserOrReadOnly, AuthorOrHasRoleOrReadOnly 
-from .serializers import (CategorySerializer, CommentSerializer, 
+from .permissions import (IsAdmin, IsAdminUserOrReadOnly,
+                          AuthorOrHasRoleOrReadOnly)
+from .serializers import (CategorySerializer, CommentSerializer,
                           GenreSerializer, RegisterSerializer,
                           ReviewSerializer, TitleGetSerializer,
-                          TitlePostSerializer, TokenSerializer, UserSerializer)
+                          TitlePostSerializer, TokenSerializer,
+                          UserSerializer)
 from .utils import generate_confirmation_code
 
 
@@ -44,11 +47,12 @@ class GenreViewSet(CDLViewSet):
 
 class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.annotate(
-        rating=Avg('reviews__score')).all()
+        rating=Avg('reviews__score')).order_by('-year')
     permission_classes = [IsAdminUserOrReadOnly, ]
     filter_backends = [DjangoFilterBackend, ]
     filterset_class = TitleFilter
     filterset_fields = ('genre', 'category', 'year', 'name')
+    pagination_class = PageNumberPagination
 
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve'):
@@ -77,14 +81,14 @@ class CommentViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         review = get_object_or_404(
-            Review, 
+            Review,
             id=self.kwargs['review_id'],
             title__id=self.kwargs['title_id'])
         return review.comments.all()
 
     def perform_create(self, serializer):
         review = get_object_or_404(
-            Review, 
+            Review,
             id=self.kwargs['review_id'],
             title__id=self.kwargs['title_id'])
         serializer.save(author=self.request.user, review=review)

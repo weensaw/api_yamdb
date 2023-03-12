@@ -11,5 +11,4 @@ class CategoryPagination(PageNumberPagination):
             'results': data,
             'next': self.get_next_link(),
             'previous': self.get_previous_link(),
-            
         })

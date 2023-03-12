@@ -79,10 +79,15 @@ class User(AbstractUser):
         max_length=20,
         choices=ROLE_CHOICES,
         default='user',
-        )
+    )
     confirmation_code = models.CharField(max_length=CODE_LENGTH, blank=True, )
-    
+
     objects = CustomUserManager()
+
+    class Meta:
+        ordering = ['date_joined']
+        verbose_name = 'Пользователь'
+        verbose_name_plural = 'Пользователи'
 
     def __str__(self):
         return self.username
@@ -104,6 +109,7 @@ class Category(models.Model):
         return self.name
 
     class Meta:
+        ordering = ['slug']
         verbose_name = 'Категория'
         verbose_name_plural = 'Категории'
 
@@ -124,6 +130,7 @@ class Genre(models.Model):
         return self.name
 
     class Meta:
+        ordering = ['slug']
         verbose_name = 'Жанр'
         verbose_name_plural = 'Жанры'
 
@@ -157,8 +164,14 @@ class Title(models.Model):
 
     def __str__(self):
         return self.name
-    
+
     class Meta:
+        ordering = ['-year', ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=['name', 'year'],
+                name='unique_title'),
+        ]
         verbose_name = 'Произведение'
         verbose_name_plural = 'Произведения'
 
@@ -178,10 +191,11 @@ class GenreTitle(models.Model):
 
     def __str__(self):
         return f'{self.title}, в жанре {self.genre}'
-    
+
     class Meta:
         verbose_name = 'Произведение и жанр'
         verbose_name_plural = 'Произведения и жанры'
+
 
 class Review(models.Model):
     text = models.TextField()
@@ -209,6 +223,7 @@ class Review(models.Model):
 
     def __str__(self):
         return self.text
+
 
 class Comment(models.Model):
     text = models.TextField()

@@ -1,17 +1,14 @@
 from django.contrib.auth import authenticate
-from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
 
-
-from rest_framework import serializers, status
+from rest_framework import serializers
 from rest_framework.exceptions import NotFound
-from rest_framework.validators import UniqueTogetherValidator
-from rest_framework.response import Response
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework_simplejwt.serializers import (
+    TokenObtainPairSerializer)
 from rest_framework_simplejwt.tokens import AccessToken
 
-from reviews.models import Category, Comment, Genre, Review, Title, User
-from .utils import generate_confirmation_code
+from reviews.models import (Category, Comment,
+                            Genre, Review, Title, User)
 
 
 class GenreSerializer(serializers.ModelSerializer):
@@ -113,7 +110,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         required=True,
         max_length=150,
         regex=r"^[^\W\d]\w*$",
-        )
+    )
     email = serializers.EmailField(max_length=254)
 
     class Meta:
@@ -127,10 +124,10 @@ class RegisterSerializer(serializers.ModelSerializer):
             return data
         if User.objects.filter(
                 email=data['email']).exists():
-            raise serializers.ValidationError("status.HTTP_400_BAD_REQUEST")
+            raise serializers.ValidationError('status.HTTP_400_BAD_REQUEST')
         if User.objects.filter(
                 username=data['username']).exists():
-            raise serializers.ValidationError("status.HTTP_400_BAD_REQUEST")
+            raise serializers.ValidationError('status.HTTP_400_BAD_REQUEST')
         return data
 
     def validate_username(self, username):
@@ -141,7 +138,8 @@ class RegisterSerializer(serializers.ModelSerializer):
         return username
 
 
-class TokenSerializer(serializers.ModelSerializer, TokenObtainPairSerializer):
+class TokenSerializer(serializers.ModelSerializer,
+                      TokenObtainPairSerializer):
 
     def __init__(self, instance=None, data=..., **kwargs):
         super().__init__(instance, data, **kwargs)
