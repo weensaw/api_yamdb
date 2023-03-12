@@ -1,7 +1,11 @@
 from django.contrib.auth import authenticate
+from django.shortcuts import get_object_or_404
+
+
 from rest_framework import serializers
 from rest_framework.exceptions import NotFound
-#from rest_framework.validators import UniqueTogetherValidator
+from rest_framework.validators import UniqueTogetherValidator
+#from rest_framework.response import Response
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.tokens import AccessToken
 
@@ -18,7 +22,7 @@ class GenreSerializer(serializers.ModelSerializer):
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
-        fields = ('id', 'name', 'slug')
+        fields = ('name', 'slug')
         lookup_field = 'slug'
         model = Category
 
@@ -29,10 +33,12 @@ class TitleGetSerializer(serializers.ModelSerializer):
     description = serializers.CharField(
         required=False
     )
+    rating = serializers.IntegerField(read_only=True, required=False)
 
     class Meta:
         fields = (
-            'id', 'name', 'year', 'description', 'genre', 'category'
+            'id', 'name', 'year', 'description',
+            'genre', 'category', 'rating'
         )
         model = Title
 
@@ -59,33 +65,27 @@ class ReviewSerializer(serializers.ModelSerializer):
     )
     author = serializers.SlugRelatedField(
         slug_field='username',
-        read_only=True)
+        read_only=True,
+        default=serializers.CurrentUserDefault()
+    )
+
+    def validate(self, data):
+        title_id = self.context['view'].kwargs.get('title_id')
+        author = self.context.get('request').user
+        title = get_object_or_404(Title, id=title_id)
+        if self.context.get('request').method != 'PATCH':
+            if title.reviews.filter(author=author).exists():
+                raise serializers.ValidationError(
+                    '"Вы уже оставили отзыв на данное произведение"'
+                )
+        return data
 
     class Meta:
         fields = ('id', 'title', 'text', 'author', 'score', 'pub_date')
         model = Review
 
-    def validate(self, data):
-        super().validate(data)
-
-        if self.context['request'].method != 'POST':
-            return data
-
-        user = self.context['request'].user
-        title_id = (
-            self.context['request'].parser_context['kwargs']['title_id']
-        )
-        if Review.objects.filter(author=user, title__id=title_id).exists():
-            raise serializers.ValidationError(
-                    "Вы уже оставили отзыв на данное произведение")
-        return data
-
 
 class CommentSerializer(serializers.ModelSerializer):
-#   review = serializers.SlugRelatedField(
-#        read_only=True,
-#       slug_field='id',
-#    )
     author = serializers.SlugRelatedField(
         slug_field='username',
         read_only=True,
@@ -108,9 +108,20 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class RegisterSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = User
         fields = ('username', 'email')
+
+    def validate(self, data):
+        username=data.get("username"),
+        email=data.get("email")      
+        if User.objects.filter(username=username).exists():
+            user1 = User.objects.filter(username=username)
+            user2 = User.objects.filter(email=email)
+            if user1 != user2:
+                raise serializers.ValidationError('Имя не соотвествуюет email')
+        return data
 
     def validate_username(self, username):
         if username == 'me':
@@ -118,14 +129,14 @@ class RegisterSerializer(serializers.ModelSerializer):
                 'Сочетание "me" нельзя использовать в качестве никнейма.'
             )
         return username
-
+    
     def create(self, validated_data):
         user = User.objects.create_user(**validated_data)
         user.email_user(
-            subject='Confirmation_code для YaMDB',
-            message=f'Сonfirmation_code {user.confirmation_code}',
-            fail_silently=False
-        )
+                subject='Confirmation_code для YaMDB',
+                message=f'Сonfirmation_code {user.confirmation_code}',
+                fail_silently=False
+            )
         return {
             'email': user.email,
             'username': user.username,
