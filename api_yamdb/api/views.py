@@ -1,9 +1,8 @@
 from django_filters.rest_framework import DjangoFilterBackend
 from django.shortcuts import get_object_or_404
-from django.core.mail import send_mail
 from django.db.models.aggregates import Avg
 
-from rest_framework import filters, status, viewsets
+from rest_framework import filters, status, views, viewsets
 from rest_framework.exceptions import MethodNotAllowed
 from rest_framework.decorators import action
 from rest_framework.mixins import CreateModelMixin, RetrieveModelMixin
@@ -21,7 +20,7 @@ from .serializers import (CategorySerializer, CommentSerializer,
                           GenreSerializer, RegisterSerializer,
                           ReviewSerializer, TitleGetSerializer,
                           TitlePostSerializer, TokenSerializer, UserSerializer)
-#from .utils import generate_confirmation_code
+from .utils import generate_confirmation_code
 
 
 class CategoryViewSet(CDLViewSet):
@@ -121,35 +120,25 @@ class UserViewSet(viewsets.ModelViewSet):
             raise MethodNotAllowed(method='DELETE')
 
 
-class RegisterView(CreateModelMixin, RetrieveModelMixin, viewsets.GenericViewSet):
-    queryset = User.objects.all()
-    serializer_class = RegisterSerializer
-    permission_classes = [AllowAny| IsAdmin]
+class RegisterView(views.APIView):
+    permission_classes = [AllowAny, ]
 
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-        return Response(
-                serializer.data,
-                status=status.HTTP_200_OK,
-                headers=headers
-        )
-
-    def retrieve(self, request, *args, **kwargs):
-        serializer = self.get_serializer(request.data)
-        username = serializer.data["username"]
-        user = get_object_or_404(User, username=username)
-        user.email_user(
-            subject='Confirmation_code для YaMDB',
-            message=f'Сonfirmation_code {user.confirmation_code}',
-            fail_silently=False
-        )
-        return Response(
-            serializer.data,
-            status=status.HTTP_200_OK
-        )
+    def post(self, request):
+        serializer = RegisterSerializer(data=request.data)
+        if serializer.is_valid():
+            username = serializer.data['username']
+            email = serializer.data['email']
+            user, _ = User.objects.get_or_create(username=username,
+                                                 email=email)
+            user.email_user(
+                subject='Confirmation_code для YaMDB',
+                message=f'Сonfirmation_code {user.confirmation_code}',
+                fail_silently=False
+            )
+            user.confirmation_code = generate_confirmation_code()
+            user.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class TokenView(TokenViewBase):
