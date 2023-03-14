@@ -1,8 +1,6 @@
-import random
-import string
+import uuid
 
 
-def generate_confirmation_code(length=6):
-    """Генерирует случайный код подтверждения"""
-    return ''.join(random.choices(
-        string.ascii_uppercase + string.digits, k=length))
+def generate_confirmation_code():
+    """Генерирует случайный UUID объект"""
+    return str(uuid.uuid4())

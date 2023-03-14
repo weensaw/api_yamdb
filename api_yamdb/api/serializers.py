@@ -3,24 +3,22 @@ from django.shortcuts import get_object_or_404
 
 from rest_framework import serializers
 from rest_framework.exceptions import NotFound
-from rest_framework_simplejwt.serializers import (
-    TokenObtainPairSerializer)
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.tokens import AccessToken
 
-from reviews.models import (Category, Comment,
-                            Genre, Review, Title, User)
+from reviews.models import Category, Comment, Genre, Review, Title, User
 
 
 class GenreSerializer(serializers.ModelSerializer):
     class Meta:
-        fields = ('name', 'slug')
+        exclude = ('id',)
         lookup_field = 'slug'
         model = Genre
 
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
-        fields = ('name', 'slug')
+        exclude = ('id',)
         lookup_field = 'slug'
         model = Category
 

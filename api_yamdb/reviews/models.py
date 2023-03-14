@@ -1,10 +1,11 @@
-from django.db import models
 from django.contrib.auth.base_user import BaseUserManager
-from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.hashers import make_password
+from django.contrib.auth.models import AbstractUser
+from django.core.validators import MaxValueValidator, MinValueValidator
+from django.db import models
 
-from .constants import (SCORE_CHOICES, ROLE_CHOICES,
-                        CODE_LENGTH)
+from .constants import ADMIN, CODE_LENGTH, MODERATOR, SCORE_CHOICES, USER
+from .validators import validate_year
 
 
 class CustomUserManager(BaseUserManager):
@@ -73,6 +74,11 @@ class CustomUserManager(BaseUserManager):
 
 
 class User(AbstractUser):
+    ROLE_CHOICES = [
+        (USER, 'user',),
+        (MODERATOR, 'moderator'),
+        (ADMIN, 'admin'),
+    ]
     email = models.EmailField(blank=False, unique=True)
     bio = models.TextField(blank=True, null=True)
     role = models.CharField(
@@ -88,6 +94,24 @@ class User(AbstractUser):
         ordering = ['date_joined']
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
+        constraints = [
+            models.constraints.UniqueConstraint(
+                fields=['username', 'email'],
+                name='user_is_unique'
+            )
+        ]
+
+    @property
+    def is_user(self):
+        return self.role == USER
+
+    @property
+    def is_admin(self):
+        return self.role == ADMIN
+
+    @property
+    def is_moderator(self):
+        return self.role == MODERATOR
 
     def __str__(self):
         return self.username
@@ -100,18 +124,18 @@ class Category(models.Model):
     )
 
     slug = models.SlugField(
-        verbose_name='Идентификатор',
+        verbose_name='слаг',
         max_length=50,
         unique=True
     )
-
-    def __str__(self):
-        return self.name
 
     class Meta:
         ordering = ['slug']
         verbose_name = 'Категория'
         verbose_name_plural = 'Категории'
+
+    def __str__(self):
+        return self.name
 
 
 class Genre(models.Model):
@@ -121,7 +145,7 @@ class Genre(models.Model):
     )
 
     slug = models.SlugField(
-        verbose_name='Идентификатор',
+        verbose_name='слаг',
         max_length=50,
         unique=True
     )
@@ -142,7 +166,8 @@ class Title(models.Model):
     )
 
     year = models.IntegerField(
-        verbose_name='Год издания'
+        verbose_name='Год издания',
+        validators=[validate_year]
     )
 
     description = models.TextField(
@@ -152,14 +177,14 @@ class Title(models.Model):
 
     genre = models.ManyToManyField(
         Genre,
-        related_name='genre'
+        related_name='titles'
     )
 
     category = models.ForeignKey(
         Category,
         on_delete=models.SET_NULL,
         null=True,
-        related_name='categories'
+        related_name='titles'
     )
 
     def __str__(self):
@@ -176,30 +201,11 @@ class Title(models.Model):
         verbose_name_plural = 'Произведения'
 
 
-class GenreTitle(models.Model):
-    title = models.ForeignKey(
-        Title,
-        verbose_name='Произведение',
-        on_delete=models.CASCADE
-    )
-
-    genre = models.ForeignKey(
-        Genre,
-        verbose_name='Жанр',
-        on_delete=models.CASCADE
-    )
-
-    def __str__(self):
-        return f'{self.title}, в жанре {self.genre}'
-
-    class Meta:
-        verbose_name = 'Произведение и жанр'
-        verbose_name_plural = 'Произведения и жанры'
-
-
 class Review(models.Model):
     text = models.TextField()
-    score = models.IntegerField(choices=SCORE_CHOICES, default=1)
+    score = models.IntegerField(
+        choices=SCORE_CHOICES,
+        validators=[MaxValueValidator(10), MinValueValidator(1)])
     title = models.ForeignKey(
         Title, on_delete=models.CASCADE, related_name='reviews'
     )
