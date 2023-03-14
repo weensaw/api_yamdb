@@ -1,28 +1,24 @@
-from django_filters.rest_framework import DjangoFilterBackend
-from django.shortcuts import get_object_or_404
 from django.db.models.aggregates import Avg
+from django.shortcuts import get_object_or_404
+from django_filters.rest_framework import DjangoFilterBackend
 
 from rest_framework import filters, status, views, viewsets
 from rest_framework.decorators import action
-from rest_framework.exceptions import MethodNotAllowed
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import (AllowAny, IsAdminUser,
-                                        IsAuthenticated)
+from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenViewBase
 
-from reviews.models import (Category, Comment, Genre,
-                            Review, Title, User)
+from reviews.models import Category, Comment, Genre, Review, Title, User
 from .filters import TitleFilter
 from .mixins import CDLViewSet
 from .paginations import CategoryPagination
-from .permissions import (IsAdmin, IsAdminUserOrReadOnly,
-                          AuthorOrHasRoleOrReadOnly)
+from .permissions import (AuthorOrHasRoleOrReadOnly, IsAdmin,
+                          IsAdminUserOrReadOnly)
 from .serializers import (CategorySerializer, CommentSerializer,
                           GenreSerializer, RegisterSerializer,
                           ReviewSerializer, TitleGetSerializer,
-                          TitlePostSerializer, TokenSerializer,
-                          UserSerializer)
+                          TitlePostSerializer, TokenSerializer, UserSerializer)
 from .utils import generate_confirmation_code
 
 
@@ -112,16 +108,13 @@ class UserViewSet(viewsets.ModelViewSet):
             serializer = UserSerializer(request.user)
             return Response(serializer.data, status=status.HTTP_200_OK)
         if request.method == 'PATCH':
-            user = User.objects.get(username=request.user.username)
             data = request.data.copy()
-            data['role'] = user.role
+            data['role'] = request.user.role
             serializer = UserSerializer(request.user,
                                         data=data, partial=True)
             serializer.is_valid(raise_exception=True)
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
-        if request.method == 'DELETE':
-            raise MethodNotAllowed(method='DELETE')
 
 
 class RegisterView(views.APIView):
@@ -129,20 +122,19 @@ class RegisterView(views.APIView):
 
     def post(self, request):
         serializer = RegisterSerializer(data=request.data)
-        if serializer.is_valid():
-            username = serializer.data['username']
-            email = serializer.data['email']
-            user, _ = User.objects.get_or_create(username=username,
-                                                 email=email)
-            user.email_user(
-                subject='Confirmation_code для YaMDB',
-                message=f'Сonfirmation_code {user.confirmation_code}',
-                fail_silently=False
-            )
-            user.confirmation_code = generate_confirmation_code()
-            user.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer.is_valid(raise_exception=True)
+        username = serializer.validated_data['username']
+        email = serializer.validated_data['email']
+        user, _ = User.objects.get_or_create(username=username,
+                                             email=email)
+        user.email_user(
+            subject='Confirmation_code для YaMDB',
+            message=f'Сonfirmation_code {user.confirmation_code}',
+            fail_silently=False
+        )
+        user.confirmation_code = generate_confirmation_code()
+        user.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class TokenView(TokenViewBase):
