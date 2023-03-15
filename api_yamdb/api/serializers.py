@@ -122,14 +122,14 @@ class RegisterSerializer(serializers.ModelSerializer):
             return data
         if User.objects.filter(
                 email=data['email']).exists():
-            raise serializers.ValidationError('status.HTTP_400_BAD_REQUEST')
+            raise serializers.ValidationError('Неверный запрос!')
         if User.objects.filter(
                 username=data['username']).exists():
-            raise serializers.ValidationError('status.HTTP_400_BAD_REQUEST')
+            raise serializers.ValidationError('Неверный запрос!')
         return data
 
     def validate_username(self, username):
-        if username == 'me':
+        if username.lower() == 'me':
             raise serializers.ValidationError(
                 'Сочетание "me" нельзя использовать в качестве никнейма.'
             )
