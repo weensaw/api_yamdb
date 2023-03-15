@@ -74,11 +74,6 @@ class CustomUserManager(BaseUserManager):
 
 
 class User(AbstractUser):
-    ROLE_CHOICES = [
-        (USER, 'user',),
-        (MODERATOR, 'moderator'),
-        (ADMIN, 'admin'),
-    ]
     email = models.EmailField(blank=False, unique=True)
     bio = models.TextField(blank=True, null=True)
     role = models.CharField(
@@ -150,13 +145,13 @@ class Genre(models.Model):
         unique=True
     )
 
-    def __str__(self):
-        return self.name
-
     class Meta:
         ordering = ['slug']
         verbose_name = 'Жанр'
         verbose_name_plural = 'Жанры'
+
+    def __str__(self):
+        return self.name
 
 
 class Title(models.Model):
