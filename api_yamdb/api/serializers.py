@@ -1,6 +1,5 @@
 from django.contrib.auth import authenticate
 from django.shortcuts import get_object_or_404
-
 from rest_framework import serializers
 from rest_framework.exceptions import NotFound
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
