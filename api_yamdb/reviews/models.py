@@ -4,7 +4,8 @@ from django.contrib.auth.models import AbstractUser
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
-from .constants import ADMIN, CODE_LENGTH, MODERATOR, SCORE_CHOICES, USER
+from .constants import (CODE_LENGTH, SCORE_CHOICES, USER, ADMIN,
+                        MODERATOR, ROLE_CHOICES)
 from .validators import validate_year
 
 
@@ -74,11 +75,6 @@ class CustomUserManager(BaseUserManager):
 
 
 class User(AbstractUser):
-    ROLE_CHOICES = [
-        (USER, 'user',),
-        (MODERATOR, 'moderator'),
-        (ADMIN, 'admin'),
-    ]
     email = models.EmailField(blank=False, unique=True)
     bio = models.TextField(blank=True, null=True)
     role = models.CharField(
@@ -150,13 +146,13 @@ class Genre(models.Model):
         unique=True
     )
 
-    def __str__(self):
-        return self.name
-
     class Meta:
         ordering = ['slug']
         verbose_name = 'Жанр'
         verbose_name_plural = 'Жанры'
+
+    def __str__(self):
+        return self.name
 
 
 class Title(models.Model):
