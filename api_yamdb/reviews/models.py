@@ -4,7 +4,7 @@ from django.contrib.auth.models import AbstractUser
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
-from .constants import ADMIN, CODE_LENGTH, MODERATOR, SCORE_CHOICES, USER
+from .constants import ADMIN, CODE_LENGTH, MODERATOR, USER
 from .validators import validate_year
 
 
@@ -187,9 +187,6 @@ class Title(models.Model):
         related_name='titles'
     )
 
-    def __str__(self):
-        return self.name
-
     class Meta:
         ordering = ['-year', ]
         constraints = [
@@ -200,11 +197,13 @@ class Title(models.Model):
         verbose_name = 'Произведение'
         verbose_name_plural = 'Произведения'
 
+    def __str__(self):
+        return self.name
+
 
 class Review(models.Model):
     text = models.TextField()
     score = models.IntegerField(
-        choices=SCORE_CHOICES,
         validators=[MaxValueValidator(10), MinValueValidator(1)])
     title = models.ForeignKey(
         Title, on_delete=models.CASCADE, related_name='reviews'
